@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
 
+
 // Basic authentication middleware
 const authenticate = async (req, res, next) => {
   try {
