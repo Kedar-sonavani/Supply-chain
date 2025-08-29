@@ -1,17 +1,41 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useParams } from 'react-router-dom';
-import { Truck, MapPin, Shield, BarChart3, Users, Clock, CheckCircle } from "lucide-react";
+import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useParams,
+  useNavigate,
+  Navigate,
+} from "react-router-dom";
+import {
+  Truck,
+  MapPin,
+  Shield,
+  BarChart3,
+  Users,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
+
+import SignupPage from "./components/SignupPage";
+import LoginPage from "./components/LoginPage";
 // The styles are now imported from a global CSS file.
-import './global.css';
+import "./global.css";
+
 // Gemini API configuration
-const API_URL = "https://generativelanguage.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
+const API_URL =
+  "https://generativelanguage.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
 const API_KEY = ""; // Canvas will automatically provide the API key at runtime.
+function isLoggedIn() {
+  return !!localStorage.getItem("token");
+}
 
 // Mock data for shipment statuses
 const statusMap = {
-  '123': 'In Transit',
-  '456': 'Out for Delivery',
-  '789': 'Delivered',
+  123: "In Transit",
+  456: "Out for Delivery",
+  789: "Delivered",
 };
 
 // --- Custom components updated to use global CSS classes ---
@@ -20,20 +44,23 @@ const statusMap = {
  * A custom Button component styled with global CSS.
  */
 const Button = ({ children, className, variant, size, asChild, ...props }) => {
-  let finalClassNames = `button ${className || ''}`;
+  let finalClassNames = `button ${className || ""}`;
 
   if (variant === "outline") {
-    finalClassNames += ' button-outline';
+    finalClassNames += " button-outline";
   } else if (variant === "secondary") {
-    finalClassNames += ' button-secondary';
+    finalClassNames += " button-secondary";
   }
 
   if (size === "lg") {
-    finalClassNames += ' button-lg';
+    finalClassNames += " button-lg";
   }
 
   if (asChild) {
-    return React.cloneElement(children, { className: finalClassNames, ...props });
+    return React.cloneElement(children, {
+      className: finalClassNames,
+      ...props,
+    });
   }
 
   return (
@@ -47,53 +74,48 @@ const Button = ({ children, className, variant, size, asChild, ...props }) => {
  * A custom Card component styled with global CSS.
  */
 const Card = ({ children, className }) => (
-  <div className={`card ${className || ''}`}>
-    {children}
-  </div>
+  <div className={`card ${className || ""}`}>{children}</div>
 );
 const CardHeader = ({ children, className }) => (
-  <div className={`card-header ${className || ''}`}>
-    {children}
-  </div>
+  <div className={`card-header ${className || ""}`}>{children}</div>
 );
 const CardContent = ({ children, className }) => (
-  <div className={`card-content ${className || ''}`}>
-    {children}
-  </div>
+  <div className={`card-content ${className || ""}`}>{children}</div>
 );
 const CardTitle = ({ children, className }) => (
-  <h4 className={`card-title ${className || ''}`}>
-    {children}
-  </h4>
+  <h4 className={`card-title ${className || ""}`}>{children}</h4>
 );
 const CardDescription = ({ children, className }) => (
-  <p className={`card-description ${className || ''}`}>
-    {children}
-  </p>
+  <p className={`card-description ${className || ""}`}>{children}</p>
 );
 
 /**
  * A custom Badge component styled with global CSS.
  */
 const Badge = ({ children, className, variant }) => {
-  let finalClassNames = `badge ${className || ''}`;
+  let finalClassNames = `badge ${className || ""}`;
   if (variant === "secondary") {
-    finalClassNames += ' badge-secondary';
+    finalClassNames += " badge-secondary";
   }
-  return (
-    <span className={finalClassNames}>
-      {children}
-    </span>
-  );
+  return <span className={finalClassNames}>{children}</span>;
 };
-
 
 // --- Pages ---
 
 /**
  * The main landing page of the application.
  */
-const HomePage = () => {
+const HomePage = ({ loggedIn, handleLogout }) => {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/signup");
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
   return (
     <div className="home-page-container">
       {/* Header */}
@@ -105,14 +127,32 @@ const HomePage = () => {
               <h1 className="header-title">SupplyTrack Pro</h1>
             </div>
             <nav className="header-nav">
-              <Link to="/dashboard/supplier" className="nav-link">For Suppliers</Link>
-              <Link to="/dashboard/driver" className="nav-link">For Drivers</Link>
-              <Link to="/track/123" className="nav-link">For Consumers</Link>
-              <Link to="/dashboard/admin" className="nav-link">Admin</Link>
+              <Link to="/dashboard/supplier" className="nav-link">
+                For Suppliers
+              </Link>
+              <Link to="/dashboard/driver" className="nav-link">
+                For Drivers
+              </Link>
+              <Link to="/track/123" className="nav-link">
+                For Consumers
+              </Link>
+              <Link to="/dashboard/admin" className="nav-link">
+                Admin
+              </Link>
             </nav>
             <div className="flex-center gap-3">
-              <Button variant="outline" className="sign-in-button">Sign In</Button>
-              <Button>Get Started</Button>
+              {!loggedIn ? (
+                <>
+                  <Button variant="outline" onClick={handleLogin}>
+                    Sign In
+                  </Button>
+                  <Button onClick={handleGetStarted}>Get Started</Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={handleLogout}>
+                  Logout
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -125,14 +165,17 @@ const HomePage = () => {
             Real-time Supply Chain Intelligence
           </Badge>
           <h2 className="hero-title">
-            Predict Risks, Track Shipments,<br /><span className="hero-title-accent">Deliver Excellence</span>
+            Predict Risks, Track Shipments,
+            <br />
+            <span className="hero-title-accent">Deliver Excellence</span>
           </h2>
           <p className="hero-description">
-            Complete supply chain visibility with AI-powered risk prediction, real-time GPS tracking, and seamless
-            collaboration between suppliers, drivers, and consumers.
+            Complete supply chain visibility with AI-powered risk prediction,
+            real-time GPS tracking, and seamless collaboration between
+            suppliers, drivers, and consumers.
           </p>
           <div className="flex-center flex-col sm:flex-row gap-4">
-            <Button size="lg">
+            <Button size="lg" onClick={handleGetStarted}>
               Start Free Trial
             </Button>
             <Button size="lg" variant="outline">
@@ -146,10 +189,12 @@ const HomePage = () => {
       <section className="features-section">
         <div className="container">
           <div className="text-center mb-12">
-            <h3 className="section-title">Everything You Need for Supply Chain Excellence</h3>
+            <h3 className="section-title">
+              Everything You Need for Supply Chain Excellence
+            </h3>
             <p className="section-description">
-              From predictive analytics to real-time tracking, our platform provides comprehensive tools for modern
-              supply chain management.
+              From predictive analytics to real-time tracking, our platform
+              provides comprehensive tools for modern supply chain management.
             </p>
           </div>
 
@@ -165,8 +210,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  AI-powered analysis of weather, traffic, and route conditions to predict and prevent delays before
-                  they happen.
+                  AI-powered analysis of weather, traffic, and route conditions
+                  to predict and prevent delays before they happen.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -181,8 +226,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Real-time location updates from driver mobile devices with automatic status notifications and ETA
-                  calculations.
+                  Real-time location updates from driver mobile devices with
+                  automatic status notifications and ETA calculations.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -197,7 +242,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Comprehensive insights into delivery performance, risk patterns, and operational efficiency metrics.
+                  Comprehensive insights into delivery performance, risk
+                  patterns, and operational efficiency metrics.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -212,7 +258,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Tailored dashboards for suppliers, drivers, consumers, and administrators with role-based permissions.
+                  Tailored dashboards for suppliers, drivers, consumers, and
+                  administrators with role-based permissions.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -227,7 +274,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Instant notifications for delays, route changes, delivery confirmations, and risk warnings.
+                  Instant notifications for delays, route changes, delivery
+                  confirmations, and risk warnings.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -242,7 +290,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Fully responsive design ensures seamless experience across desktop, tablet, and mobile devices.
+                  Fully responsive design ensures seamless experience across
+                  desktop, tablet, and mobile devices.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -254,9 +303,12 @@ const HomePage = () => {
       <section className="user-roles-section">
         <div className="container">
           <div className="text-center mb-12">
-            <h3 className="section-title">Built for Every Role in Your Supply Chain</h3>
+            <h3 className="section-title">
+              Built for Every Role in Your Supply Chain
+            </h3>
             <p className="section-description">
-              Specialized tools and interfaces designed for suppliers, drivers, consumers, and administrators.
+              Specialized tools and interfaces designed for suppliers, drivers,
+              consumers, and administrators.
             </p>
           </div>
 
@@ -270,7 +322,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription>
-                  Create shipments, assign drivers, track deliveries, and monitor supply chain performance.
+                  Create shipments, assign drivers, track deliveries, and
+                  monitor supply chain performance.
                 </CardDescription>
                 <Button variant="outline" className="w-full" asChild>
                   <Link to="/dashboard/supplier">Learn More</Link>
@@ -287,7 +340,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription>
-                  Mobile-friendly interface for GPS tracking, status updates, and route optimization.
+                  Mobile-friendly interface for GPS tracking, status updates,
+                  and route optimization.
                 </CardDescription>
                 <Button variant="outline" className="w-full" asChild>
                   <Link to="/dashboard/driver">Learn More</Link>
@@ -304,7 +358,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription>
-                  Track your shipments in real-time and receive updates on delivery status and ETAs.
+                  Track your shipments in real-time and receive updates on
+                  delivery status and ETAs.
                 </CardDescription>
                 <Button variant="outline" className="w-full" asChild>
                   <Link to="/track/123">Learn More</Link>
@@ -321,7 +376,8 @@ const HomePage = () => {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription>
-                  Comprehensive analytics, user management, and system oversight capabilities.
+                  Comprehensive analytics, user management, and system oversight
+                  capabilities.
                 </CardDescription>
                 <Button variant="outline" className="w-full" asChild>
                   <Link to="/dashboard/admin">Learn More</Link>
@@ -337,10 +393,11 @@ const HomePage = () => {
         <div className="container text-center max-w-3xl">
           <h3 className="cta-title">Ready to Transform Your Supply Chain?</h3>
           <p className="cta-description">
-            Join thousands of businesses already using SupplyTrack Pro to optimize their logistics operations.
+            Join thousands of businesses already using SupplyTrack Pro to
+            optimize their logistics operations.
           </p>
           <div className="flex-center flex-col sm:flex-row gap-4">
-            <Button size="lg" variant="secondary">
+            <Button size="lg" variant="secondary" onClick={handleGetStarted}>
               Start Free Trial
             </Button>
             <Button size="lg" variant="outline" className="cta-button-outline">
@@ -360,16 +417,33 @@ const HomePage = () => {
                 <span className="footer-title">SupplyTrack Pro</span>
               </div>
               <p className="footer-text">
-                Advanced supply chain management with real-time tracking and predictive analytics.
+                Advanced supply chain management with real-time tracking and
+                predictive analytics.
               </p>
             </div>
             <div>
               <h4 className="footer-heading">Platform</h4>
               <ul className="footer-list">
-                <li><Link to="/dashboard/supplier" className="footer-link">For Suppliers</Link></li>
-                <li><Link to="/dashboard/driver" className="footer-link">For Drivers</Link></li>
-                <li><Link to="/track/123" className="footer-link">For Consumers</Link></li>
-                <li><Link to="/dashboard/admin" className="footer-link">Admin Dashboard</Link></li>
+                <li>
+                  <Link to="/dashboard/supplier" className="footer-link">
+                    For Suppliers
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dashboard/driver" className="footer-link">
+                    For Drivers
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/track/123" className="footer-link">
+                    For Consumers
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dashboard/admin" className="footer-link">
+                    Admin Dashboard
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
@@ -405,26 +479,26 @@ const HomePage = () => {
  */
 const TrackingPage = () => {
   const { trackingCode } = useParams();
-  const [friendlyStatus, setFriendlyStatus] = useState('');
+  const [friendlyStatus, setFriendlyStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const currentStatus = statusMap[trackingCode] || 'Status Unknown';
+  const currentStatus = statusMap[trackingCode] || "Status Unknown";
 
   const generateFriendlyStatus = async () => {
     setIsLoading(true);
-    setFriendlyStatus('');
+    setFriendlyStatus("");
 
     try {
       const prompt = `Create a friendly and conversational status update for a package with tracking code ${trackingCode}, which has a current status of "${currentStatus}". Keep the response brief and positive.`;
-      
+
       const payload = {
-        contents: [{ parts: [{ text: prompt }] }]
+        contents: [{ parts: [{ text: prompt }] }],
       };
 
       const response = await fetch(API_URL + API_KEY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -432,15 +506,19 @@ const TrackingPage = () => {
       }
 
       const result = await response.json();
-      if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+      if (
+        result.candidates &&
+        result.candidates.length > 0 &&
+        result.candidates[0].content.parts.length > 0
+      ) {
         const text = result.candidates[0].content.parts[0].text;
         setFriendlyStatus(text);
       } else {
-        setFriendlyStatus('Could not generate a friendly status.');
+        setFriendlyStatus("Could not generate a friendly status.");
       }
     } catch (error) {
-      console.error('Error calling Gemini API:', error);
-      setFriendlyStatus('Failed to generate status. Please try again later.');
+      console.error("Error calling Gemini API:", error);
+      setFriendlyStatus("Failed to generate status. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -449,17 +527,21 @@ const TrackingPage = () => {
   return (
     <div className="tracking-page-container">
       <h1 className="tracking-title">Tracking Page</h1>
-      <p className="tracking-code-text">Tracking Code: <span className="tracking-code">{trackingCode}</span></p>
-      <p className="tracking-status-text">Current Status: <span className="tracking-status">{currentStatus}</span></p>
+      <p className="tracking-code-text">
+        Tracking Code: <span className="tracking-code">{trackingCode}</span>
+      </p>
+      <p className="tracking-status-text">
+        Current Status: <span className="tracking-status">{currentStatus}</span>
+      </p>
 
       <button
         onClick={generateFriendlyStatus}
         className="tracking-button"
         disabled={isLoading}
       >
-        {isLoading ? 'Generating...' : 'Generate Friendly Status ✨'}
+        {isLoading ? "Generating..." : "Generate Friendly Status ✨"}
       </button>
-      
+
       {friendlyStatus && (
         <div className="tracking-result">
           <p className="tracking-result-heading">Friendly Update:</p>
@@ -470,25 +552,37 @@ const TrackingPage = () => {
   );
 };
 
+const ProtectedRoute = ({ children }) => {
+  return isLoggedIn() ? children : <Navigate to="/signup" />;
+};
+
 // Mock components for other dashboards
 const SupplierDashboard = () => (
   <div className="dashboard-container">
     <h1 className="dashboard-title">Supplier Dashboard</h1>
-    <p className="dashboard-text">Welcome to the supplier portal. This is where you can manage your orders and shipments.</p>
+    <p className="dashboard-text">
+      Welcome to the supplier portal. This is where you can manage your orders
+      and shipments.
+    </p>
   </div>
 );
 
 const DriverDashboard = () => (
   <div className="dashboard-container">
     <h1 className="dashboard-title">Driver Dashboard</h1>
-    <p className="dashboard-text">Welcome, driver. View your assigned routes and delivery schedules here.</p>
+    <p className="dashboard-text">
+      Welcome, driver. View your assigned routes and delivery schedules here.
+    </p>
   </div>
 );
 
 const AdminDashboard = () => (
   <div className="dashboard-container">
     <h1 className="dashboard-title">Admin Dashboard</h1>
-    <p className="dashboard-text">Welcome, admin. This dashboard provides an an overview of all system activities.</p>
+    <p className="dashboard-text">
+      Welcome, admin. This dashboard provides an an overview of all system
+      activities.
+    </p>
   </div>
 );
 
@@ -498,21 +592,58 @@ const AdminDashboard = () => (
 const PageNotFound = () => (
   <div className="not-found-container">
     <h1 className="not-found-title">404 - Page Not Found</h1>
-    <p className="not-found-text">The page you're looking for does not exist.</p>
+    <p className="not-found-text">
+      The page you're looking for does not exist.
+    </p>
   </div>
 );
 
 // Main App component which sets up the routing
 export default function App() {
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setLoggedIn(false);
+  };
   return (
     <Router>
       <main className="min-h-screen-container">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/"
+            element={<HomePage loggedIn={loggedIn} handleLogout={handleLogout} />}
+          />
+          <Route path="/signup" element={<SignupPage setLoggedIn={setLoggedIn} />} />
+          <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} />} />
           <Route path="/track/:trackingCode" element={<TrackingPage />} />
-          <Route path="/dashboard/supplier" element={<SupplierDashboard />} />
-          <Route path="/dashboard/driver" element={<DriverDashboard />} />
-          <Route path="/dashboard/admin" element={<AdminDashboard />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard/supplier"
+            element={
+              <ProtectedRoute>
+                <SupplierDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/driver"
+            element={
+              <ProtectedRoute>
+                <DriverDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </main>
